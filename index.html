@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Winter Arc</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0A101C;--surface:#121B2C;--surface-2:#1A2640;--border:#243149;--ice:#6FE0EC;--ice-dim:#3C5A66;--amber:#F0A860;--text:#E9EEF6;--muted:#8B98AE;--good:#67D99B;}
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,-apple-system,sans-serif;padding-top:env(safe-area-inset-top,0px);padding-bottom:calc(env(safe-area-inset-bottom,0px) + 24px);min-height:100%;}
+  .wrap{max-width:460px;margin:0 auto;padding:22px 18px 10px;}
+  .brand{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:4px;}
+  h1{font-family:'Big Shoulders Display',sans-serif;font-weight:800;font-size:42px;letter-spacing:0.5px;margin:0;line-height:0.9;background:linear-gradient(180deg,#F4FBFC 0%, var(--ice) 120%);-webkit-background-clip:text;background-clip:text;color:transparent;}
+  .daycount{font-size:13px;color:var(--muted);text-align:right;}
+  .daycount b{color:var(--ice);font-size:16px;}
+  .sub{color:var(--muted);font-size:14px;margin:2px 0 20px;}
+  .streakbar{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:18px;}
+  .flame{font-size:22px;}
+  .streaknum{font-size:22px;font-weight:700;}
+  .streaklabel{font-size:12.5px;color:var(--muted);margin-left:auto;text-align:right;}
+  .week{display:flex;gap:6px;margin-bottom:20px;}
+  .daycell{flex:1;aspect-ratio:1;border-radius:10px;background:var(--surface);border:1px solid var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:11px;color:var(--muted);gap:2px;cursor:pointer;}
+  .daycell .dnum{font-size:13px;font-weight:600;color:var(--text);}
+  .daycell.today{border-color:var(--ice);}
+  .daycell.full{background:var(--ice-dim);border-color:var(--ice);}
+  .daycell.full .dnum{color:var(--ice);}
+  .daycell.partial{background:#1C2A24;}
+  .sectiontitle{font-size:13px;color:var(--muted);margin:22px 0 10px;}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
+  .item{display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid var(--border);}
+  .item:last-child{border-bottom:none;}
+  .item .ico{font-size:17px;width:20px;text-align:center;}
+  .item .label{flex:1;font-size:14.5px;}
+  .chk{width:24px;height:24px;border-radius:7px;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;background:transparent;flex-shrink:0;transition:background .15s, border-color .15s;}
+  .chk.on{background:var(--good);border-color:var(--good);}
+  .chk.on::after{content:"✓";color:#09140E;font-size:14px;font-weight:700;}
+  .protein-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;}
+  .protein-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;}
+  .protein-amt{font-size:26px;font-weight:700;}
+  .protein-amt span{font-size:14px;color:var(--muted);font-weight:500;}
+  .pbar-track{height:10px;background:var(--ice-dim);border-radius:6px;overflow:hidden;margin-bottom:12px;}
+  .pbar-fill{height:100%;background:var(--ice);border-radius:6px;transition:width .25s;}
+  .protein-controls{display:flex;gap:8px;}
+  .pbtn{flex:1;background:var(--surface-2);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px 0;font-size:14px;font-weight:600;cursor:pointer;}
+  .pbtn:active{background:var(--ice-dim);}
+  .pinput-row{display:flex;gap:8px;margin-top:10px;}
+  .pinput{flex:1;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px 12px;font-size:14px;font-family:inherit;}
+  .padd{background:var(--ice);color:#06222A;border:none;border-radius:10px;padding:10px 18px;font-weight:700;font-size:14px;cursor:pointer;}
+  .targetrow{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:12.5px;color:var(--muted);flex-wrap:wrap;}
+  .targetrow input{width:60px;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:6px 8px;font-family:inherit;font-size:13px;}
+  .sparkwrap{display:flex;gap:4px;align-items:flex-end;height:50px;margin-top:14px;}
+  .sparkbar{flex:1;background:var(--ice-dim);border-radius:3px 3px 0 0;min-height:4px;}
+  .sparkbar.hit{background:var(--ice);}
+  .monthlabel{font-size:11.5px;color:var(--muted);margin:16px 0 6px;}
+  .arcgrid{display:grid;grid-template-columns:repeat(15,1fr);gap:4px;}
+  .arccell{aspect-ratio:1;border-radius:3px;background:var(--bg);border:1px solid var(--border);}
+  .arccell.full{background:var(--ice);border-color:var(--ice);}
+  .arccell.partial{background:var(--ice-dim);border-color:var(--ice-dim);}
+  .arccell.future{opacity:0.35;}
+  .note{margin-top:22px;padding:14px 16px;background:var(--surface);border:1px dashed var(--border);border-radius:12px;font-size:12.5px;color:var(--muted);line-height:1.5;}
+  .note b{color:var(--text);}
+  .srcrow{display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--border);}
+  .srcrow .label{flex:1;font-size:14px;}
+  .srcrow input{width:56px;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:6px 8px;font-family:inherit;font-size:13px;}
+  .srcrow .g{font-size:12px;color:var(--muted);}
+  .srchead{font-size:12px;color:var(--muted);margin:14px 0 4px;}
+  .padd.sec{background:var(--surface-2);color:var(--text);border:1px solid var(--border);padding:10px 12px;}
+  .warn{display:none;background:#3A2A14;border:1px solid var(--amber);color:var(--amber);border-radius:12px;padding:12px 14px;font-size:12.5px;line-height:1.5;margin-bottom:16px;}
+  textarea.bk{width:100%;height:90px;margin-top:10px;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px;font-size:11px;font-family:ui-monospace,monospace;}
+  .savebtn{display:block;width:100%;margin-top:18px;background:var(--ice);color:#06222A;border:none;border-radius:12px;padding:14px;font-weight:700;font-size:15px;cursor:pointer;}
+  .savebtn:active{opacity:.8;}
+  .savebtn.done{background:var(--good);}
+  .reset{display:block;margin:12px auto 0;background:none;border:none;color:var(--muted);font-size:12px;text-decoration:underline;cursor:pointer;padding:8px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="warn" id="storeWarn"><b>Saving is blocked here.</b> This browser view isn't keeping data between refreshes. Open the page in Safari/Chrome from the link (not a file preview), turn off private mode, and use Export below to back up.</div>
+
+  <div class="brand">
+    <h1>WINTER<br>ARC</h1>
+    <div class="daycount">Day <b id="dayNum">1</b><br>of 75</div>
+  </div>
+  <div class="sub" id="todayLabel">—</div>
+
+  <div class="streakbar">
+    <div class="flame" id="flameIco">🔥</div>
+    <div><div class="streaknum" id="streakNum">0</div><div style="font-size:11px;color:var(--muted);">day streak</div></div>
+    <div class="streaklabel">Complete every item<br>to keep it alive</div>
+  </div>
+
+  <div class="week" id="weekStrip"></div>
+
+  <div class="sectiontitle">Today's checklist</div>
+  <div class="card" id="checklist"></div>
+
+  <button class="savebtn" id="saveBtn" onclick="manualSave()">Save progress</button>
+
+  <div class="sectiontitle">Protein</div>
+  <div class="protein-card">
+    <div class="protein-top">
+      <div class="protein-amt"><span id="proteinCur">0</span><span> / <span id="proteinTarget">150</span> g</span></div>
+      <div id="proteinPct" style="color:var(--ice);font-weight:700;">0%</div>
+    </div>
+    <div class="pbar-track"><div class="pbar-fill" id="pbarFill" style="width:0%;"></div></div>
+    <div class="protein-controls">
+      <button class="pbtn" onclick="addProtein(20)">+20g</button>
+      <button class="pbtn" onclick="addProtein(30)">+30g</button>
+      <button class="pbtn" onclick="addProtein(40)">+40g</button>
+    </div>
+    <div class="pinput-row">
+      <input class="pinput" id="customAmt" type="number" inputmode="numeric" placeholder="custom grams">
+      <button class="padd" onclick="addCustom()">Add</button>
+      <button class="padd sec" onclick="setProteinExact()">Set</button>
+      <button class="padd sec" onclick="undoProtein()">Undo</button>
+    </div>
+    <div class="srchead">Quick sources (tick = adds grams, edit grams to suit)</div>
+    <div id="srcList"></div>
+    <div class="targetrow">Daily target: <input type="number" id="targetInput" value="150"> g &nbsp;·&nbsp; 7-day avg: <span id="proteinAvg">–</span>g &nbsp;·&nbsp; hit rate: <span id="proteinConsistency">–</span>%</div>
+    <div class="sparkwrap" id="proteinBars"></div>
+    <div class="monthlabel">Last 30 days (dashed line = target)</div>
+    <svg id="proteinMonthSvg" viewBox="0 0 300 70" style="width:100%;height:70px;"></svg>
+  </div>
+
+  <div class="sectiontitle">Steps</div>
+  <div class="protein-card">
+    <div class="protein-top">
+      <div class="protein-amt"><span id="stepsCur">0</span><span> / <span id="stepsTarget">10,000</span></span></div>
+      <div id="stepsPct" style="color:var(--ice);font-weight:700;">0%</div>
+    </div>
+    <div class="pbar-track"><div class="pbar-fill" id="stepsBarFill" style="width:0%;"></div></div>
+    <div class="protein-controls">
+      <button class="pbtn" onclick="addSteps(1000)">+1,000</button>
+      <button class="pbtn" onclick="addSteps(2500)">+2,500</button>
+      <button class="pbtn" onclick="addSteps(5000)">+5,000</button>
+    </div>
+    <div class="pinput-row">
+      <input class="pinput" id="stepsCustom" type="number" inputmode="numeric" placeholder="from Health app">
+      <button class="padd" onclick="addStepsCustom()">Add</button>
+      <button class="padd sec" onclick="setStepsExact()">Set</button>
+      <button class="padd sec" onclick="undoSteps()">Undo</button>
+    </div>
+    <div class="targetrow">Daily target: <input type="number" id="stepsTargetInput" value="10000"> steps &nbsp;·&nbsp; 7-day avg: <span id="stepsAvg">–</span> &nbsp;·&nbsp; hit rate: <span id="stepsConsistency">–</span>%</div>
+    <div class="sparkwrap" id="stepsBars"></div>
+    <div class="monthlabel">Last 30 days (dashed line = target)</div>
+    <svg id="stepsMonthSvg" viewBox="0 0 300 70" style="width:100%;height:70px;"></svg>
+  </div>
+
+  <div class="sectiontitle">Sleep</div>
+  <div class="protein-card">
+    <div class="protein-top">
+      <div class="protein-amt"><span id="sleepCur">0</span><span> / <span id="sleepTarget">8</span> hrs last night</span></div>
+      <div id="sleepPct" style="color:var(--ice);font-weight:700;">0%</div>
+    </div>
+    <div class="pbar-track"><div class="pbar-fill" id="sleepBarFill" style="width:0%;"></div></div>
+    <div class="protein-controls">
+      <button class="pbtn" onclick="setSleep(6)">6h</button>
+      <button class="pbtn" onclick="setSleep(7)">7h</button>
+      <button class="pbtn" onclick="setSleep(8)">8h</button>
+      <button class="pbtn" onclick="setSleep(9)">9h</button>
+    </div>
+    <div class="pinput-row">
+      <input class="pinput" id="sleepCustom" type="number" step="0.5" inputmode="decimal" placeholder="custom hrs">
+      <button class="padd" onclick="setSleepCustom()">Set</button>
+    </div>
+    <div class="targetrow">Target: <input type="number" id="sleepTargetInput" value="8"> hrs &nbsp;·&nbsp; 7-night avg: <span id="sleepAvg">–</span>h &nbsp;·&nbsp; consistency: <span id="sleepConsistency">–</span>%</div>
+    <div class="sparkwrap" id="sleepBars"></div>
+    <div class="monthlabel">Last 30 days (dashed line = target)</div>
+    <svg id="sleepMonthSvg" viewBox="0 0 300 70" style="width:100%;height:70px;"></svg>
+  </div>
+
+  <div class="sectiontitle">Weight</div>
+  <div class="protein-card">
+    <div class="protein-top">
+      <div class="protein-amt"><span id="weightCur">–</span><span> kg today</span></div>
+    </div>
+    <svg id="weightSpark" viewBox="0 0 300 60" style="width:100%;height:60px;margin-bottom:12px;"></svg>
+    <div class="pinput-row">
+      <input class="pinput" id="weightInput" type="number" step="0.1" inputmode="decimal" placeholder="e.g. 72.4">
+      <button class="padd" onclick="logWeight()">Log</button>
+    </div>
+    <div class="targetrow" id="weightMeta" style="margin-top:12px;">Log your weight to start tracking change.</div>
+  </div>
+
+  <div class="sectiontitle">Full Winter Arc</div>
+  <div class="protein-card">
+    <div class="arcgrid" id="arcGrid"></div>
+    <div class="targetrow" id="arcSummary" style="margin-top:14px;">–</div>
+  </div>
+
+  <div class="sectiontitle">Your data</div>
+  <div class="protein-card">
+    <div class="targetrow" style="margin-top:0;" id="dataInfo">–</div>
+    <div class="pinput-row">
+      <button class="padd" onclick="exportData()">Export</button>
+      <button class="padd sec" onclick="importData()">Import</button>
+    </div>
+    <textarea class="bk" id="bkBox" placeholder="Export shows your data here (copy it somewhere safe). To restore, paste it here and tap Import."></textarea>
+  </div>
+
+  <div class="note">
+    <b>Real alarms:</b> this page can't send push notifications on iPhone. For actual meal/protein reminders, open the <b>Shortcuts</b> app → Automation → "Time of Day" → add one for each meal, or set recurring alerts in <b>Reminders</b>. Add this page to your Home Screen (Share → Add to Home Screen) so it opens like an app.
+  </div>
+
+  <button class="savebtn" id="saveBtn2" onclick="manualSave()">Save progress</button>
+  <button class="reset" onclick="resetToday()">Reset today</button>
+
+</div>
+
+<script>
+const HABITS = [
+  {key:'gym', ico:'🏋️', label:'Gym session done'},
+  {key:'steps', ico:'👟', label:'10,000 steps', auto:true},
+  {key:'protein', ico:'🥩', label:'Hit protein target', auto:true},
+  {key:'sleep', ico:'🌙', label:'Hit sleep target', auto:true},
+  {key:'breakfast', ico:'🍳', label:'Breakfast on time'},
+  {key:'lunch', ico:'🍛', label:'Lunch on time'},
+  {key:'dinner', ico:'🥗', label:'Dinner on time'},
+  {key:'water', ico:'💧', label:'3L+ water'},
+  {key:'creatine', ico:'💊', label:'Creatine taken'},
+  {key:'nojunk', ico:'🍟', label:'No junk food'},
+  {key:'nosmoke', ico:'🚭', label:'No smoking'},
+  {key:'noalcohol', ico:'🍷', label:'No alcohol'},
+  {key:'nomb', ico:'🧘', label:'No masturbation'},
+  {key:'skill', ico:'📚', label:'Learn new skill'},
+];
+const DURATION = 75;
+const SOURCES = [
+  {key:'egg', label:'🥚 Egg', def:12},
+  {key:'muesli', label:'🥣 Muesli', def:10},
+  {key:'gain', label:'🥤 Protein gain', def:25},
+];
+function srcGrams(key){ return (store.sources && store.sources[key]!=null) ? store.sources[key] : SOURCES.find(x=>x.key===key).def; }
+function proteinOf(d){
+  if(!d) return 0;
+  let t = d.protein||0;
+  if(d.srcs) SOURCES.forEach(x=>{ if(d.srcs[x.key]) t += srcGrams(x.key); });
+  return t;
+}
+// local date key (the old UTC version flipped days at 5:30am IST)
+const todayKey = d => d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+let store = {startDate: todayKey(new Date()), target:150, stepTarget:10000, sleepTarget:8, days:{}};
+
+function exportData(){
+  const box = document.getElementById('bkBox');
+  box.value = JSON.stringify(store);
+  box.select();
+  try{ navigator.clipboard.writeText(box.value); }catch(e){}
+}
+function importData(){
+  const box = document.getElementById('bkBox');
+  try{
+    const o = JSON.parse(box.value);
+    if(!o || typeof o.days!=='object') throw new Error('bad');
+    store = o; save(); load();
+    box.value = '';
+  }catch(e){ alert('That does not look like valid Winter Arc data.'); }
+}
+function load(){
+  try{
+    localStorage.setItem('wa_test','1');
+    if(localStorage.getItem('wa_test')!=='1') throw new Error('x');
+    localStorage.removeItem('wa_test');
+  }catch(e){ document.getElementById('storeWarn').style.display='block'; }
+  try{
+    const raw = localStorage.getItem('winterArcData');
+    if(raw) store = JSON.parse(raw);
+  }catch(e){ console.error('load failed', e); }
+  if(!store.days) store.days = {};
+  if(!store.target) store.target = 150;
+  if(!store.stepTarget) store.stepTarget = 10000;
+  if(!store.sleepTarget) store.sleepTarget = 8;
+  if(!store.startDate) store.startDate = todayKey(new Date());
+  render();
+}
+function buildLineChart(svgId, days, getValue, target){
+  const vals = [];
+  for(let i=days-1;i>=0;i--){
+    const d = new Date(); d.setDate(d.getDate()-i);
+    const dd = store.days[todayKey(d)];
+    vals.push(dd ? (getValue(dd)||0) : 0);
+  }
+  const svg = document.getElementById(svgId);
+  const w=300,h=70,pad=6;
+  const maxV = Math.max(target*1.2, ...vals, 1);
+  const pts = vals.map((v,i)=>{
+    const x = (i/(days-1))*(w-2*pad)+pad;
+    const y = h-pad-(v/maxV)*(h-2*pad);
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  }).join(' ');
+  const targetY = (h-pad-(target/maxV)*(h-2*pad)).toFixed(1);
+  svg.innerHTML = `<line x1="${pad}" y1="${targetY}" x2="${w-pad}" y2="${targetY}" stroke="#3C5A66" stroke-width="1" stroke-dasharray="3,3"/><polyline points="${pts}" fill="none" stroke="#6FE0EC" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`;
+}
+function renderArcGrid(){
+  const el = document.getElementById('arcGrid');
+  el.innerHTML = '';
+  const start = new Date(store.startDate+'T00:00:00'); start.setHours(0,0,0,0);
+  const today = new Date(); today.setHours(0,0,0,0);
+  let fullCount=0, partialCount=0;
+  for(let i=0;i<DURATION;i++){
+    const d = new Date(start); d.setDate(d.getDate()+i);
+    const key = todayKey(d);
+    const cell = document.createElement('div');
+    let cls = 'arccell';
+    if(d > today){
+      cls += ' future';
+    } else {
+      const dd = store.days[key];
+      if(dd && dayComplete(key)){ cls += ' full'; fullCount++; }
+      else if(dd && hasAnyData(dd)){ cls += ' partial'; partialCount++; }
+    }
+    cell.className = cls;
+    cell.title = d.toLocaleDateString();
+    el.appendChild(cell);
+  }
+  const daysSoFar = Math.min(DURATION, Math.max(1, Math.round((today-start)/86400000)+1));
+  const missed = Math.max(0, daysSoFar - fullCount - partialCount);
+  document.getElementById('arcSummary').textContent =
+    `Day ${daysSoFar} of ${DURATION} · ${fullCount} full · ${partialCount} partial · ${missed} missed`;
+}
+function hasAnyData(dd){
+  return Object.entries(dd).some(([k,v]) => Array.isArray(v) ? v.length>0 : (k==='manual'||k==='srcs') ? Object.values(v).some(Boolean) : (typeof v==='number' ? v>0 : !!v));
+}
+// FIX: auto items count as done if the number hits the target OR you tapped it on manually.
+// (Before, tapping an already-hit item stored "false" and it stayed stuck unchecked.)
+function metByNumber(key, d){
+  if(!d) return false;
+  if(key==='protein') return proteinOf(d) >= store.target;
+  if(key==='steps') return (d.steps||0) >= store.stepTarget;
+  if(key==='sleep') return (d.sleepHours||0) >= store.sleepTarget;
+  return false;
+}
+function isAutoOK(key, d){
+  return metByNumber(key, d) || !!(d && d.manual && d.manual[key]);
+}
+function save(){
+  try{ localStorage.setItem('winterArcData', JSON.stringify(store)); return true; }
+  catch(e){ console.error('save failed', e); return false; }
+}
+function manualSave(){
+  save();
+  ['saveBtn','saveBtn2'].forEach(id=>{
+    const b = document.getElementById(id);
+    b.textContent = 'Saved ✓'; b.classList.add('done');
+    setTimeout(()=>{ b.textContent = 'Save progress'; b.classList.remove('done'); }, 1500);
+  });
+}
+function getDay(key){
+  if(!store.days[key]) store.days[key] = {protein:0};
+  return store.days[key];
+}
+function dayComplete(key){
+  const d = store.days[key];
+  if(!d) return false;
+  return HABITS.every(h => h.auto ? isAutoOK(h.key, d) : !!d[h.key]);
+}
+function computeStreak(){
+  let streak = 0;
+  let cur = new Date();
+  while(true){
+    const key = todayKey(cur);
+    if(dayComplete(key)){ streak++; cur.setDate(cur.getDate()-1); }
+    else break;
+  }
+  return streak;
+}
+function render(){
+  const today = new Date();
+  const tKey = todayKey(today);
+  const day = getDay(tKey);
+
+  document.getElementById('todayLabel').textContent = today.toLocaleDateString(undefined,{weekday:'long', month:'long', day:'numeric'});
+  const start = new Date(store.startDate+'T00:00:00');
+  const t0 = new Date(); t0.setHours(0,0,0,0);
+  const dayNum = Math.max(1, Math.round((t0 - start)/86400000)+1);
+  document.getElementById('dayNum').textContent = Math.min(dayNum, DURATION);
+
+  const list = document.getElementById('checklist');
+  list.innerHTML = '';
+  HABITS.forEach(h=>{
+    const row = document.createElement('div');
+    row.className = 'item';
+    const on = h.auto ? isAutoOK(h.key, day) : !!day[h.key];
+    row.innerHTML = `<div class="ico">${h.ico}</div><div class="label">${h.label}</div><div class="chk ${on?'on':''}" data-key="${h.key}" data-auto="${h.auto?1:0}"></div>`;
+    list.appendChild(row);
+  });
+  list.querySelectorAll('.chk').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      const k = el.dataset.key;
+      if(el.dataset.auto==='1'){
+        if(metByNumber(k, day)) return; // already hit by your numbers
+        if(!day.manual) day.manual = {};
+        day.manual[k] = !day.manual[k];
+      } else {
+        day[k] = !day[k];
+      }
+      save(); render();
+    });
+  });
+
+  // protein quick sources
+  const sl = document.getElementById('srcList');
+  sl.innerHTML = '';
+  SOURCES.forEach(x=>{
+    const on = !!(day.srcs && day.srcs[x.key]);
+    const row = document.createElement('div');
+    row.className = 'srcrow';
+    row.innerHTML = `<div class="chk ${on?'on':''}"></div><div class="label">${x.label}</div><input type="number" inputmode="numeric" value="${srcGrams(x.key)}"><span class="g">g</span>`;
+    row.querySelector('.chk').addEventListener('click', ()=>{
+      if(!day.srcs) day.srcs = {};
+      day.srcs[x.key] = !day.srcs[x.key];
+      save(); render();
+    });
+    row.querySelector('input').addEventListener('change', e=>{
+      const v = parseInt(e.target.value,10);
+      if(!isNaN(v) && v>=0){ if(!store.sources) store.sources = {}; store.sources[x.key] = v; save(); render(); }
+    });
+    sl.appendChild(row);
+  });
+
+  // protein
+  const cur = proteinOf(day);
+  document.getElementById('proteinCur').textContent = cur;
+  document.getElementById('proteinTarget').textContent = store.target;
+  document.getElementById('targetInput').value = store.target;
+  const pct = Math.min(100, Math.round((cur/store.target)*100));
+  document.getElementById('proteinPct').textContent = pct+'%';
+  document.getElementById('pbarFill').style.width = pct+'%';
+
+  const proteinVals = [];
+  const proteinBarsEl = document.getElementById('proteinBars');
+  proteinBarsEl.innerHTML = '';
+  for(let i=6;i>=0;i--){
+    const d = new Date(); d.setDate(d.getDate()-i);
+    const dd = store.days[todayKey(d)];
+    const g = proteinOf(dd);
+    proteinVals.push(g);
+    const bar = document.createElement('div');
+    bar.className = 'sparkbar'+(g>=store.target?' hit':'');
+    bar.style.height = Math.max(4, Math.min(50,(g/(store.target*1.5))*50))+'px';
+    proteinBarsEl.appendChild(bar);
+  }
+  const loggedProtein = proteinVals.filter(v=>v>0);
+  document.getElementById('proteinAvg').textContent = loggedProtein.length ? Math.round(loggedProtein.reduce((a,b)=>a+b,0)/loggedProtein.length) : '–';
+  document.getElementById('proteinConsistency').textContent = Math.round((proteinVals.filter(v=>v>=store.target).length/7)*100);
+  buildLineChart('proteinMonthSvg', 30, d=>proteinOf(d), store.target);
+
+  // steps
+  const stepsCur = day.steps||0;
+  document.getElementById('stepsCur').textContent = stepsCur.toLocaleString();
+  document.getElementById('stepsTarget').textContent = store.stepTarget.toLocaleString();
+  document.getElementById('stepsTargetInput').value = store.stepTarget;
+  const stepsPct = Math.min(100, Math.round((stepsCur/store.stepTarget)*100));
+  document.getElementById('stepsPct').textContent = stepsPct+'%';
+  document.getElementById('stepsBarFill').style.width = stepsPct+'%';
+
+  const stepsVals = [];
+  const stepsBarsEl = document.getElementById('stepsBars');
+  stepsBarsEl.innerHTML = '';
+  for(let i=6;i>=0;i--){
+    const d = new Date(); d.setDate(d.getDate()-i);
+    const dd = store.days[todayKey(d)];
+    const s = (dd && dd.steps) ? dd.steps : 0;
+    stepsVals.push(s);
+    const bar = document.createElement('div');
+    bar.className = 'sparkbar'+(s>=store.stepTarget?' hit':'');
+    bar.style.height = Math.max(4, Math.min(50,(s/(store.stepTarget*1.3))*50))+'px';
+    stepsBarsEl.appendChild(bar);
+  }
+  const loggedSteps = stepsVals.filter(v=>v>0);
+  document.getElementById('stepsAvg').textContent = loggedSteps.length ? Math.round(loggedSteps.reduce((a,b)=>a+b,0)/loggedSteps.length).toLocaleString() : '–';
+  document.getElementById('stepsConsistency').textContent = Math.round((stepsVals.filter(v=>v>=store.stepTarget).length/7)*100);
+  buildLineChart('stepsMonthSvg', 30, d=>d.steps, store.stepTarget);
+
+  // sleep
+  const sleepCur = day.sleepHours||0;
+  document.getElementById('sleepCur').textContent = sleepCur||0;
+  document.getElementById('sleepTarget').textContent = store.sleepTarget;
+  document.getElementById('sleepTargetInput').value = store.sleepTarget;
+  const sleepPct = Math.min(100, Math.round((sleepCur/store.sleepTarget)*100));
+  document.getElementById('sleepPct').textContent = sleepPct+'%';
+  document.getElementById('sleepBarFill').style.width = sleepPct+'%';
+
+  const sleepVals = [];
+  const sleepBarsEl = document.getElementById('sleepBars');
+  sleepBarsEl.innerHTML = '';
+  for(let i=6;i>=0;i--){
+    const d = new Date(); d.setDate(d.getDate()-i);
+    const dd = store.days[todayKey(d)];
+    const h = (dd && dd.sleepHours) ? dd.sleepHours : 0;
+    sleepVals.push(h);
+    const bar = document.createElement('div');
+    bar.className = 'sparkbar'+(h>=store.sleepTarget?' hit':'');
+    bar.style.height = Math.max(4, Math.min(50,(h/12)*50))+'px';
+    sleepBarsEl.appendChild(bar);
+  }
+  const loggedSleep = sleepVals.filter(v=>v>0);
+  document.getElementById('sleepAvg').textContent = loggedSleep.length ? (loggedSleep.reduce((a,b)=>a+b,0)/loggedSleep.length).toFixed(1) : '–';
+  const consistency = loggedSleep.length ? Math.round((sleepVals.filter(v=>v>=store.sleepTarget-1).length/7)*100) : 0;
+  document.getElementById('sleepConsistency').textContent = consistency;
+  buildLineChart('sleepMonthSvg', 30, d=>d.sleepHours, store.sleepTarget);
+
+  renderArcGrid();
+  const nDays = Object.keys(store.days).filter(k=>hasAnyData(store.days[k])).length;
+  document.getElementById('dataInfo').textContent = `Started ${store.startDate} · ${nDays} day(s) with data saved on this device`;
+
+  // weight
+  document.getElementById('weightCur').textContent = (day.weight!=null) ? day.weight : '–';
+  const weightKeys = Object.keys(store.days).filter(k=>store.days[k].weight!=null).sort();
+  const svg = document.getElementById('weightSpark');
+  if(weightKeys.length){
+    const startW = store.days[weightKeys[0]].weight;
+    const latestW = store.days[weightKeys[weightKeys.length-1]].weight;
+    const sevenAgo = new Date(); sevenAgo.setDate(sevenAgo.getDate()-7);
+    let weekAgoW = null;
+    weightKeys.forEach(k=>{ if(new Date(k+'T00:00:00') <= sevenAgo) weekAgoW = store.days[k].weight; });
+    const sinceStart = (latestW-startW).toFixed(1);
+    let metaText = `Start: ${startW}kg · since start: ${sinceStart>=0?'+':''}${sinceStart}kg`;
+    if(weekAgoW!=null){
+      const sinceWeek = (latestW-weekAgoW).toFixed(1);
+      metaText += ` · 7-day: ${sinceWeek>=0?'+':''}${sinceWeek}kg`;
+    }
+    document.getElementById('weightMeta').textContent = metaText;
+    const vals = weightKeys.slice(-14).map(k=>store.days[k].weight);
+    const min = Math.min(...vals), max = Math.max(...vals), range = (max-min)||1;
+    const w=300,h=60,pad=6;
+    const pts = vals.map((v,i)=>{
+      const x = vals.length>1 ? (i/(vals.length-1))*(w-2*pad)+pad : w/2;
+      const y = h-pad-((v-min)/range)*(h-2*pad);
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    }).join(' ');
+    svg.innerHTML = `<polyline points="${pts}" fill="none" stroke="#6FE0EC" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`;
+  } else {
+    document.getElementById('weightMeta').textContent = 'Log your weight to start tracking change.';
+    svg.innerHTML = '';
+  }
+
+  // streak
+  const streak = computeStreak();
+  document.getElementById('streakNum').textContent = streak;
+  document.getElementById('flameIco').style.opacity = streak>0 ? 1 : 0.3;
+
+  // week strip
+  const strip = document.getElementById('weekStrip');
+  strip.innerHTML = '';
+  for(let i=6;i>=0;i--){
+    const d = new Date(); d.setDate(d.getDate()-i);
+    const key = todayKey(d);
+    const dd = store.days[key];
+    const cell = document.createElement('div');
+    let cls = 'daycell';
+    if(key===tKey) cls += ' today';
+    if(dd && dayComplete(key)) cls += ' full';
+    else if(dd && hasAnyData(dd)) cls += ' partial';
+    cell.className = cls;
+    cell.innerHTML = `<div>${d.toLocaleDateString(undefined,{weekday:'narrow'})}</div><div class="dnum">${d.getDate()}</div>`;
+    strip.appendChild(cell);
+  }
+}
+function addProtein(g){
+  const day = getDay(todayKey(new Date()));
+  day.protein = (day.protein||0) + g;
+  (day.pLog = day.pLog||[]).push(g);
+  save(); render();
+}
+function addCustom(){
+  const inp = document.getElementById('customAmt');
+  const v = parseInt(inp.value,10);
+  if(!isNaN(v) && v>0){ addProtein(v); inp.value=''; }
+}
+document.getElementById('targetInput').addEventListener('change', (e)=>{
+  const v = parseInt(e.target.value,10);
+  if(!isNaN(v) && v>0){ store.target = v; save(); render(); }
+});
+function undoProtein(){
+  const day = getDay(todayKey(new Date()));
+  if(day.pLog && day.pLog.length){ day.protein = Math.max(0,(day.protein||0) - day.pLog.pop()); save(); render(); }
+}
+function setProteinExact(){
+  const inp = document.getElementById('customAmt');
+  const v = parseInt(inp.value,10);
+  if(isNaN(v) || v<0) return;
+  const day = getDay(todayKey(new Date()));
+  const fromSrc = proteinOf(day) - (day.protein||0);
+  day.protein = Math.max(0, v - fromSrc); day.pLog = [];
+  inp.value=''; save(); render();
+}
+function undoSteps(){
+  const day = getDay(todayKey(new Date()));
+  if(day.sLog && day.sLog.length){ day.steps = Math.max(0,(day.steps||0) - day.sLog.pop()); save(); render(); }
+}
+function setStepsExact(){
+  const inp = document.getElementById('stepsCustom');
+  const v = parseInt(inp.value,10);
+  if(isNaN(v) || v<0) return;
+  const day = getDay(todayKey(new Date()));
+  day.steps = v; day.sLog = [];
+  inp.value=''; save(); render();
+}
+function addSteps(n){
+  const day = getDay(todayKey(new Date()));
+  day.steps = (day.steps||0) + n;
+  (day.sLog = day.sLog||[]).push(n);
+  save(); render();
+}
+function addStepsCustom(){
+  const inp = document.getElementById('stepsCustom');
+  const v = parseInt(inp.value,10);
+  if(!isNaN(v) && v>0){ addSteps(v); inp.value=''; }
+}
+document.getElementById('stepsTargetInput').addEventListener('change', (e)=>{
+  const v = parseInt(e.target.value,10);
+  if(!isNaN(v) && v>0){ store.stepTarget = v; save(); render(); }
+});
+function setSleep(h){
+  const day = getDay(todayKey(new Date()));
+  day.sleepHours = h;
+  save(); render();
+}
+function setSleepCustom(){
+  const inp = document.getElementById('sleepCustom');
+  const v = parseFloat(inp.value);
+  if(!isNaN(v) && v>0){ setSleep(v); inp.value=''; }
+}
+document.getElementById('sleepTargetInput').addEventListener('change', (e)=>{
+  const v = parseFloat(e.target.value);
+  if(!isNaN(v) && v>0){ store.sleepTarget = v; save(); render(); }
+});
+function logWeight(){
+  const inp = document.getElementById('weightInput');
+  const v = parseFloat(inp.value);
+  if(!isNaN(v) && v>0){
+    const day = getDay(todayKey(new Date()));
+    day.weight = v;
+    save(); render(); inp.value='';
+  }
+}
+function resetToday(){
+  const key = todayKey(new Date());
+  delete store.days[key];
+  save(); render();
+}
+load();
+
+// auto-roll to the new day: check on app resume and every 30s
+let lastKey = todayKey(new Date());
+function checkNewDay(){
+  const k = todayKey(new Date());
+  if(k !== lastKey){ lastKey = k; render(); }
+}
+document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) checkNewDay(); });
+window.addEventListener('focus', checkNewDay);
+window.addEventListener('pageshow', checkNewDay);
+setInterval(checkNewDay, 30000);
+</script>
+</body>
+</html>
